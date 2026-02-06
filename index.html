@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Grimoire Fournier-Lacour</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { 
+            --primary: #8d6e63; --bg: #fdfaf0; --text: #3e2723; --accent: #4caf50; 
+            --paper: #ffffff; --card-bg: #ffffff; --input-bg: #ffffff; --vege: #4caf50;
+            --star: #ffc107; --heart: #e91e63;
+        }
+        body.dark-mode {
+            --bg: #1a1a1a; --text: #e0e0e0; --paper: #2d2d2d; 
+            --card-bg: #2d2d2d; --input-bg: #3d3d3d; --primary: #bcaaa4;
+        }
+        body { background-color: var(--bg); font-family: 'Quicksand', sans-serif; color: var(--text); margin: 0; padding: 20px; transition: all 0.3s; display: flex; flex-direction: column; min-height: 100vh; }
+        .main-layout { display: flex; max-width: 1200px; margin: auto; gap: 20px; width: 100%; flex: 1; }
+        .container { flex: 1; min-width: 0; }
+        .alpha-nav { display: flex; flex-direction: column; gap: 5px; position: sticky; top: 20px; height: fit-content; padding: 10px; background: rgba(141, 110, 99, 0.05); border-radius: 15px; border: 1px solid rgba(141, 110, 99, 0.1); }
+        .alpha-btn { background: none; border: none; color: var(--primary); font-weight: bold; cursor: pointer; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; transition: 0.2s; }
+        .alpha-btn.active { background: var(--primary); color: white; }
+        @media (max-width: 850px) { .main-layout { flex-direction: column; } .alpha-nav { flex-direction: row; flex-wrap: wrap; position: static; justify-content: center; } }
+        header { text-align: center; padding: 10px 0; }
+        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; margin: 0; color: var(--primary); }
+        .admin-zone { display: none; background: rgba(141, 110, 99, 0.1); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; border: 1px dashed var(--primary); }
+        .admin-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 5px; transition: 0.2s; }
+        .search-area { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+        .search-bar { flex: 1; min-width: 200px; padding: 12px 20px; border-radius: 25px; border: 1px solid #ccc; background: var(--input-bg); color: var(--text); }
+        .filter-pill { padding: 10px 15px; border-radius: 25px; border: 2px solid var(--accent); background: var(--paper); color: var(--accent); cursor: pointer; font-weight: bold; }
+        .filter-pill.active { background: var(--accent); color: white; }
+        .menu-categories { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-btn { background: var(--paper); border: 2px solid var(--primary); color: var(--primary); padding: 8px 18px; border-radius: 20px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .recipe-card { background: var(--card-bg); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; position: relative; }
+        .recipe-card:hover { transform: translateY(-5px); }
+        .badge-area { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 5; }
+        .vege-badge { background: var(--accent); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; }
+        .fav-indicator { color: var(--heart); font-size: 1.2rem; }
+        .recipe-img { width: 100%; height: 160px; object-fit: cover; }
+        .recipe-content { padding: 15px; }
+        .card-stars { color: var(--star); font-size: 0.9rem; margin-top: 5px; }
+        footer { text-align: center; padding: 40px 20px 20px; font-family: 'Dancing Script', cursive; font-size: 1.5rem; color: var(--primary); width: 100%; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--paper); border-radius: 20px; width: 95%; max-width: 850px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .form-container { padding: 30px; display: flex; flex-direction: column; gap: 15px; }
+        .form-container input, .form-container select, .form-container textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; background: var(--input-bg); color: var(--text); font-family: inherit; box-sizing: border-box; }
+        .detail-header { position: relative; height: 280px; color: white; overflow: hidden; }
+        .detail-header-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.4); }
+        .detail-header-text { position: absolute; bottom: 25px; left: 30px; right: 30px; z-index: 2; }
+        .rating-group { display: flex; gap: 5px; margin-top: 10px; }
+        .rating-input { font-size: 1.8rem; color: rgba(255,255,255,0.4); cursor: pointer; }
+        .star-active { color: var(--star); }
+        .detail-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; padding: 30px; }
+        @media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+        .detail-sidebar { background: rgba(141, 110, 99, 0.05); padding: 20px; border-radius: 15px; border: 1px dashed var(--primary); }
+        
+        /* Styles des listes Ingrédients et Étapes */
+        .ing-list { list-style: none; padding: 0; margin: 0; }
+        .ing-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed rgba(141, 110, 99, 0.15); font-size: 0.95rem; }
+        .ing-bullet { color: var(--accent); font-size: 0.8rem; }
+        .step-list { list-style: none; padding: 0; margin-top: 15px; }
+        .step-item { display: flex; gap: 15px; margin-bottom: 15px; padding: 12px; border-radius: 10px; background: rgba(141, 110, 99, 0.03); border-left: 4px solid var(--primary); }
+        .step-number { font-weight: bold; color: var(--primary); min-width: 25px; font-size: 1.1rem; }
+
+        .portion-control { display: flex; align-items: center; justify-content: space-between; background: var(--paper); padding: 8px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .portion-btn { background: var(--primary); color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .prep-mode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; overflow-y: auto; }
+        .progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s; }
+        .prep-item { display: flex; align-items: flex-start; gap: 15px; padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; }
+        .prep-item.done { background: rgba(76, 175, 80, 0.1); opacity: 0.6; text-decoration: line-through; }
+        .float-btns { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 500; }
+        .circle-btn { width: 55px; height: 55px; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        
+        .health-section { margin-bottom: 15px; }
+        .health-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+        .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: #ccc; color: white; border-radius: 50%; font-size: 11px; cursor: help; position: relative; }
+        .info-icon:hover::after { 
+            content: "Analyse basée sur l'équilibre entre légumes/fibres et matières grasses/sucres."; 
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); 
+            background: #333; color: white; padding: 10px; border-radius: 8px; width: 200px; 
+            font-size: 0.75rem; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: normal;
+        }
+        .health-bar-container { height: 10px; background: #eee; border-radius: 5px; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+        .health-bar-fill { height: 100%; transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .voice-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; filter: grayscale(1); transition: 0.2s; }
+        .voice-btn:hover { filter: grayscale(0); transform: scale(1.1); }
+        .voice-btn.active { filter: grayscale(0); transform: scale(1.2); color: var(--accent); }
+
+        pre { white-space: pre-wrap; font-family: inherit; margin: 0; line-height: 1.6; }
+        #printZone { display: none; }
+        @media print {
+            body { background: white !important; }
+            header, .main-layout, .float-btns, .modal, footer, .no-print, .prep-mode { display: none !important; }
+            #printZone { display: block !important; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="printZone"></div>
+<header><h1> 🍴 Le Grimoire culinaire des Fournier-Lacour 🍽️</h1></header>
+
+<div class="main-layout">
+    <div class="container">
+        <div id="adminZone" class="admin-zone">
+            <button class="admin-btn" onclick="document.getElementById('importFile').click()">📂 Charger .json</button>
+            <button class="admin-btn" style="background:#5d4037" onclick="exportData()">💾 Exporter mon travail</button>
+            <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+        </div>
+
+        <div class="search-area">
+            <input type="text" class="search-bar" placeholder="🔍 Rechercher une recette ou un ingrédient..." id="search" oninput="displayRecipes()">
+            <button id="vegeOnlyBtn" class="filter-pill" onclick="toggleFilter('vege')" style="color:var(--accent); border-color:var(--accent);">🍃 Végé</button>
+            <button id="favOnlyBtn" class="filter-pill" onclick="toggleFilter('fav')" style="color:var(--heart); border-color:var(--heart);">❤️ Favoris</button>
+        </div>
+        
+        <div class="menu-categories" id="catMenu">
+            <button class="filter-btn active" data-cat="Tous">Tous</button>
+            <button class="filter-btn" data-cat="Plat"><span>🍱</span> Plats</button>
+            <button class="filter-btn" data-cat="Salade"><span>🥗</span> Salades</button>
+            <button class="filter-btn" data-cat="Soupe"><span>🍲</span> Soupes</button>
+            <button class="filter-btn" data-cat="Accompagnement"><span>🥔</span> Accomp.</button>
+            <button class="filter-btn" data-cat="Sauce"><span>🍯</span> Sauces</button>
+            <button class="filter-btn" data-cat="Dessert"><span>🍰</span> Desserts</button>
+        </div>
+
+        <div class="recipe-grid" id="recipeGrid"></div>
+    </div>
+    <nav class="alpha-nav no-print" id="alphaNav"><button class="alpha-btn active" onclick="setAlphaFilter('Tous')">#</button></nav>
+</div>
+
+<footer class="no-print">❤️ Toutes nos recettes sont garanties avec amour ❤️</footer>
+
+<div class="float-btns no-print">
+    <button class="circle-btn" onclick="openAddModal()" id="addBtn" style="display:none; background:var(--primary); color:white">+</button>
+    <button class="circle-btn" onclick="toggleAdmin()" id="lockBtn" style="background:var(--paper); color:var(--primary)">🔓</button>
+    <button class="circle-btn" onclick="toggleTheme()" style="background:var(--paper); color:var(--text)">🌓</button>
+</div>
+
+<div id="detailModal" class="modal" onclick="if(event.target == this) closeModals()">
+    <div class="modal-content" id="detailContent"></div>
+</div>
+
+<div id="addModal" class="modal" onclick="if(event.target == this) closeModals()">
+    <div class="modal-content" style="max-width:600px">
+        <div class="form-container">
+            <h3 id="modalTitle" style="margin-top:0; color:var(--primary); font-family:'Dancing Script'; font-size:2rem;">Nouvelle Recette</h3>
+            <input type="hidden" id="editId">
+            <label style="font-weight:600;">Nom de la recette</label>
+            <input type="text" id="titre" placeholder="Ex: Gratin de courgettes">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div>
+                    <label style="font-weight:600;">Catégorie</label>
+                    <select id="cat">
+                        <option value="Plat">🍱 Plat</option>
+                        <option value="Salade">🥗 Salade</option>
+                        <option value="Soupe">🍲 Soupe</option>
+                        <option value="Accompagnement">🥔 Accompagnement</option>
+                        <option value="Sauce">🍯 Sauce</option>
+                        <option value="Dessert">🍰 Dessert</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight:600;">Portions de base</label>
+                    <input type="number" id="basePortion" value="4">
+                </div>
+            </div>
+            <label style="font-weight:600; display:flex; align-items:center; gap:10px; cursor:pointer;"><input type="checkbox" id="isVege" style="width:auto;"> 🍃 Recette Végétarienne</label>
+            <label style="font-weight:600;">Lien de l'image (URL)</label>
+            <input type="text" id="img" placeholder="https://image.com/plat.jpg">
+            <label style="font-weight:600;">Ingrédients (un par ligne)</label>
+            <textarea id="ing" rows="6" placeholder="1 oignon\n200g de riz..."></textarea>
+            <label style="font-weight:600;">Instructions (une étape par ligne)</label>
+            <textarea id="inst" rows="8" placeholder="Étape 1..."></textarea>
+            <button class="admin-btn" onclick="saveRecipe()" style="width:100%; padding:18px; background:var(--accent);">💾 ENREGISTRER</button>
+            <button class="admin-btn" onclick="closeModals()" style="background:#eee; color:#666; margin:0;">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<div id="prepMode" class="prep-mode">
+    <div class="no-print" style="padding: 20px; background: var(--bg); position: sticky; top: 0; border-bottom: 2px solid var(--primary); z-index:10">
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width:700px; margin:auto;">
+            <h2 id="prepTitle" style="margin:0; font-family:'Dancing Script';"></h2>
+            <button onclick="closePrepMode()" class="admin-btn" style="margin:0">Quitter</button>
+        </div>
+        <div style="max-width:700px; margin: 10px auto 0;">
+            <div id="progressText" style="font-size:0.8rem; font-weight:bold; margin-bottom:5px;">0%</div>
+            <div style="width:100%; background:#eee; height:12px; border-radius:6px; overflow:hidden;"><div id="progressBar" class="progress-bar"></div></div>
+        </div>
+    </div>
+    <div id="prepList" style="max-width:700px; margin:auto; padding:20px;"></div>
+</div>
+
+<script>
+    let editMode = false;
+    let filters = { vege: false, fav: false, cat: 'Tous', alpha: 'Tous' };
+    let currentServings = null;
+    let localRecipes = [];
+    let isSpeaking = false;
+    const CODE_SECRET = "1234";
+
+    // --- Fonctions de base ---
+    function speak(text) {
+        if (isSpeaking) { window.speechSynthesis.cancel(); isSpeaking = false; return; }
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'fr-FR';
+        msg.onstart = () => { isSpeaking = true; };
+        msg.onend = () => { isSpeaking = false; };
+        msg.onerror = () => { isSpeaking = false; };
+        window.speechSynthesis.speak(msg);
+    }
+
+    function calculateHealthScore(ing) {
+        let score = 55; 
+        const items = ing.toLowerCase();
+        const good = ['légume', 'fruit', 'oignon', 'ail', 'tomate', 'salade', 'poisson', 'lentille', 'chou', 'carotte', 'courgette', 'épinard', 'brocoli'];
+        const rich = ['sucre', 'beurre', 'crème', 'huile', 'fromage', 'lardons', 'sel', 'farine', 'frit', 'mayonnaise'];
+        good.forEach(w => { if(items.includes(w)) score += 7; });
+        rich.forEach(w => { if(items.includes(w)) score -= 5; });
+        return Math.min(100, Math.max(10, score));
+    }
+
+    const getEmoji = (cat) => {
+        const emojis = {'Plat':'🍱', 'Salade':'🥗', 'Soupe':'🍲', 'Accompagnement':'🥔', 'Sauce':'🍯', 'Dessert':'🍰'};
+        return emojis[cat] || '🍽️';
+    };
+
+    const nav = document.getElementById('alphaNav');
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(l => {
+        const b = document.createElement('button');
+        b.className = 'alpha-btn'; b.innerText = l; b.onclick = () => setAlphaFilter(l);
+        nav.appendChild(b);
+    });
+
+    function setAlphaFilter(l) {
+        filters.alpha = l;
+        document.querySelectorAll('.alpha-btn').forEach(btn => btn.classList.toggle('active', btn.innerText === l || (l === 'Tous' && btn.innerText === '#')));
+        displayRecipes();
+    }
+
+    function displayRecipes() {
+        const grid = document.getElementById('recipeGrid');
+        const query = document.getElementById('search').value.toLowerCase();
+        grid.innerHTML = '';
+        let filtered = localRecipes.filter(r => {
+            const matchesSearch = r.titre.toLowerCase().includes(query) || r.ing.toLowerCase().includes(query);
+            const matchesCat = filters.cat === 'Tous' || r.cat === filters.cat;
+            const matchesVege = !filters.vege || r.vege;
+            const matchesFav = !filters.fav || r.fav;
+            const matchesAlpha = filters.alpha === 'Tous' || r.titre.toUpperCase().startsWith(filters.alpha);
+            return matchesSearch && matchesCat && matchesVege && matchesFav && matchesAlpha;
+        });
+        filtered.sort((a, b) => a.titre.localeCompare(b.titre));
+        filtered.forEach(r => {
+            const stars = '★'.repeat(r.note || 0) + '☆'.repeat(5 - (r.note || 0));
+            grid.innerHTML += `
+                <div class="recipe-card" onclick="openDetail(${r.id})">
+                    <div class="badge-area">${r.fav ? '<div class="fav-indicator">❤️</div>' : ''}${r.vege ? '<div class="vege-badge">🍃</div>' : ''}</div>
+                    <img src="${r.img || 'https://images.unsplash.com/photo-1495195129352-aec325a55b65?w=400'}" class="recipe-img">
+                    <div class="recipe-content">
+                        <span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${getEmoji(r.cat)} ${r.cat}</span>
+                        <h3 style="margin:5px 0 0 0; font-size:1.1rem;">${r.titre}</h3>
+                        <div class="card-stars">${stars}</div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function openDetail(id) {
+        const r = localRecipes.find(rec => rec.id === id);
+        if(!r) return;
+        if(currentServings === null) currentServings = r.portions || 4;
+        const detail = document.getElementById('detailContent');
+        const hScore = calculateHealthScore(r.ing);
+        const starsHtml = Array.from({length: 5}, (_, i) => `<span class="rating-input ${i < (r.note || 0) ? 'star-active' : ''}" onclick="setNote(${r.id}, ${i+1}); event.stopPropagation();">★</span>`).join('');
+        
+        // Mise en forme des Ingrédients
+        const formattedIngs = formatIngredients(r.ing, r.portions || 4, currentServings);
+        const ingsHtml = formattedIngs.split('\n')
+            .filter(ing => ing.trim() !== '')
+            .map(ing => `<li class="ing-item"><span class="ing-bullet">●</span><span>${ing}</span></li>`)
+            .join('');
+
+        // Mise en forme des Étapes
+        const stepsHtml = r.inst.split('\n')
+            .filter(step => step.trim() !== '')
+            .map((step, index) => `<div class="step-item"><span class="step-number">${index + 1}.</span><span>${step}</span></div>`)
+            .join('');
+
+        detail.innerHTML = `
+            <div style="position:absolute; right:20px; top:20px; z-index:10; cursor:pointer; background:white; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.2); color:black;" onclick="closeModals()" class="no-print">✕</div>
+            <div class="detail-header">
+                <img src="${r.img || 'https://images.unsplash.com/photo-1495195129352-aec325a55b65?w=800'}" class="detail-header-img">
+                <div class="detail-header-text">
+                    <h2 style="margin:0; font-family:'Dancing Script'; font-size:2.8rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${r.titre}</h2>
+                    <div class="rating-group no-print">${starsHtml}</div>
+                </div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-sidebar">
+                    <div class="portion-control no-print">
+                        <button class="portion-btn" onclick="updateServings(${r.id}, -1); event.stopPropagation();">-</button>
+                        <span style="font-weight:bold;">${currentServings} pers.</span>
+                        <button class="portion-btn" onclick="updateServings(${r.id}, 1); event.stopPropagation();">+</button>
+                    </div>
+                    <div class="health-section">
+                        <div class="health-label">Score Santé <span class="info-icon">?</span></div>
+                        <div class="health-bar-container"><div class="health-bar-fill" style="width:${hScore}%; background:${hScore > 60 ? 'var(--accent)' : (hScore > 35 ? '#ffa726' : '#ef5350')}"></div></div>
+                    </div>
+                    <button class="admin-btn" style="width:100%; margin-bottom:10px; background:${r.fav ? 'var(--heart)' : 'transparent'}; border:2px solid var(--heart); color:${r.fav ? 'white' : 'var(--heart)'}" onclick="toggleFavorite(${r.id}); event.stopPropagation();">${r.fav ? '❤️ Favori' : '🤍 Favori'}</button>
+                    <button class="admin-btn" style="width:100%; margin-bottom:10px; border:2px solid var(--primary); background:transparent; color:var(--primary)" onclick="printRecipe(${r.id}); event.stopPropagation();">🖨️ Imprimer</button>
+                    ${editMode ? `<button class="admin-btn" style="width:100%; background:var(--accent);" onclick="editRecipe(${r.id}); event.stopPropagation();">✏️ Modifier</button>` : ''}
+                    
+                    <h4>🛒 Ingrédients</h4>
+                    <ul class="ing-list">${ingsHtml}</ul>
+                </div>
+                <div class="detail-main">
+                    <button class="admin-btn no-print" onclick="startPrep(${r.id}); event.stopPropagation();" style="width:100%; padding:15px; background:var(--accent); margin-bottom:20px;">👨‍🍳 CUISINER</button>
+                    <h4 style="display:flex; align-items:center; gap:10px;">👨‍🍳 Instructions <button class="voice-btn" onclick="speak(\`${r.inst.replace(/`/g, "'")}\`); event.stopPropagation();">🔊</button></h4>
+                    <div class="step-list">${stepsHtml}</div>
+                </div>
+            </div>`;
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function resetForm() {
+        document.getElementById('editId').value = '';
+        document.getElementById('titre').value = '';
+        document.getElementById('cat').value = 'Plat';
+        document.getElementById('isVege').checked = false;
+        document.getElementById('basePortion').value = 4;
+        document.getElementById('img').value = '';
+        document.getElementById('ing').value = '';
+        document.getElementById('inst').value = '';
+    }
+
+    function openAddModal() { resetForm(); document.getElementById('modalTitle').innerText = "Nouvelle Recette"; document.getElementById('addModal').style.display = 'flex'; }
+
+    function editRecipe(id) {
+        const r = localRecipes.find(rec => rec.id === id);
+        if(!r) return;
+        document.getElementById('modalTitle').innerText = "Modifier la recette";
+        document.getElementById('editId').value = r.id;
+        document.getElementById('titre').value = r.titre;
+        document.getElementById('cat').value = r.cat;
+        document.getElementById('isVege').checked = r.vege;
+        document.getElementById('basePortion').value = r.portions || 4;
+        document.getElementById('img').value = r.img || '';
+        document.getElementById('ing').value = r.ing;
+        document.getElementById('inst').value = r.inst;
+        closeModals();
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function saveRecipe() {
+        const id = document.getElementById('editId').value;
+        const recipeData = {
+            id: id ? parseInt(id) : Date.now(),
+            titre: document.getElementById('titre').value,
+            cat: document.getElementById('cat').value,
+            vege: document.getElementById('isVege').checked,
+            portions: parseInt(document.getElementById('basePortion').value) || 4,
+            img: document.getElementById('img').value,
+            ing: document.getElementById('ing').value,
+            inst: document.getElementById('inst').value,
+            note: id ? (localRecipes.find(r => r.id == id)?.note || 0) : 0,
+            fav: id ? (localRecipes.find(r => r.id == id)?.fav || false) : false
+        };
+        if(!recipeData.titre) return alert("Le titre est obligatoire !");
+        if(id) { const idx = localRecipes.findIndex(r => r.id == id); localRecipes[idx] = recipeData; }
+        else { localRecipes.push(recipeData); }
+        saveAndRefresh(); closeModals(); resetForm();
+    }
+
+    function saveAndRefresh() { localStorage.setItem('myRecipes', JSON.stringify(localRecipes)); displayRecipes(); }
+    function setNote(id, note) { const r = localRecipes.find(rec => rec.id === id); if(r) { r.note = note; saveAndRefresh(); openDetail(id); } }
+    function toggleFavorite(id) { const r = localRecipes.find(rec => rec.id === id); if(r) { r.fav = !r.fav; saveAndRefresh(); openDetail(id); } }
+    function updateServings(id, delta) { currentServings = Math.max(1, currentServings + delta); openDetail(id); }
+    function toggleFilter(type) { filters[type] = !filters[type]; document.getElementById(type === 'vege' ? 'vegeOnlyBtn' : 'favOnlyBtn').classList.toggle('active'); displayRecipes(); }
+    function closeModals() { 
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
+        currentServings = null; 
+        window.speechSynthesis.cancel(); 
+        isSpeaking = false;
+    }
+    function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+
+    function toggleAdmin() {
+        if (!editMode) {
+            const input = prompt("Entrez le code secret pour activer le mode éditeur :");
+            if (input === CODE_SECRET) {
+                editMode = true;
+                confetti({ particleCount: 50, spread: 40, origin: { y: 0.9 } });
+            } else if (input !== null) {
+                alert("Code incorrect ! Accès refusé.");
+                return;
+            } else { return; }
+        } else { editMode = false; }
+        document.getElementById('adminZone').style.display = editMode ? 'block' : 'none';
+        document.getElementById('addBtn').style.display = editMode ? 'flex' : 'none';
+        document.getElementById('lockBtn').innerText = editMode ? '🔒' : '🔓';
+        displayRecipes();
+    }
+
+    function startPrep(id) {
+        const r = localRecipes.find(rec => rec.id === id);
+        document.getElementById('prepTitle').innerText = r.titre;
+        const list = document.getElementById('prepList');
+        list.innerHTML = '';
+        r.inst.split('\n').filter(l => l.trim()).forEach(l => { 
+            list.innerHTML += `<div class="prep-item" onclick="this.classList.toggle('done'); updateProgress();">
+                <span>${l}</span>
+                <button class="voice-btn" onclick="event.stopPropagation(); speak(\`${l.replace(/`/g, "'")}\`)">🔊</button>
+            </div>`; 
+        });
+        document.getElementById('prepMode').style.display = 'block';
+    }
+
+    function updateProgress() {
+        const total = document.querySelectorAll('.prep-item').length;
+        const done = document.querySelectorAll('.prep-item.done').length;
+        const pc = total === 0 ? 0 : Math.round((done / total) * 100);
+        document.getElementById('progressBar').style.width = pc + '%';
+        document.getElementById('progressText').innerText = pc + '%';
+        if (pc === 100) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+
+    function closePrepMode() { 
+        document.getElementById('prepMode').style.display = 'none'; 
+        window.speechSynthesis.cancel(); 
+        isSpeaking = false;
+    }
+    function exportData() { const blob = new Blob([JSON.stringify(localRecipes, null, 2)], { type: "application/json" }); const dl = document.createElement('a'); dl.href = URL.createObjectURL(blob); dl.download = `grimoire.json`; dl.click(); }
+    function importData(e) { const reader = new FileReader(); reader.onload = (event) => { localRecipes = JSON.parse(event.target.result); saveAndRefresh(); }; reader.readAsText(e.target.files[0]); }
+    function printRecipe(id) {
+        const r = localRecipes.find(rec => rec.id === id);
+        const zone = document.getElementById('printZone');
+        zone.innerHTML = `<h1>${r.titre}</h1><p>${r.cat} | ${currentServings} pers.</p><hr><pre>${formatIngredients(r.ing, r.portions || 4, currentServings)}</pre><hr><pre>${r.inst}</pre>`;
+        window.print();
+    }
+    function formatIngredients(text, base, target) {
+        const ratio = target / base;
+        return text.replace(/(\d+(?:[.,]\d+)?)/g, (match) => {
+            const num = parseFloat(match.replace(',', '.'));
+            const result = num * ratio;
+            return Number.isInteger(result) ? result : result.toFixed(1).replace('.', ',');
+        });
+    }
+
+    document.getElementById('catMenu').addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn');
+        if(btn) { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); filters.cat = btn.getAttribute('data-cat'); displayRecipes(); }
+    });
+
+    const MES_RECETTES_JSON = [
+  {
+    "id": 1770344547198,
+    "titre": "Truffade",
+    "note": 5,
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x355/2/e/2c727e79edf20e643622729cb5fa358c0713f13504a2834cdbd68f33de810e/OIP.s2bMslsypGc3D8kbAoW_VwHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.s2bMslsypGc3D8kbAoW_VwHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1kg de pommes de terre\n1 oignon\n1 cuillère à soupe de crème fraîche\nSel, poivre\nUn peu de muscade\n250g de St Nectaire\n",
+    "inst": "Éplucher les patates et les couper en rondelles.\nÉplucher l’oignon et le couper en lamelles.\nMettre les patates à cuire avec de la matière grasse.\nQuand les patates sont cuites, rajouter la crème fraîche.\nPréchauffer le four à 180°.\nCouper le fromage et le mettre dessus. \nEnfourner 15 minutes.",
+    "fav": false
+  },
+  {
+    "id": 1770348770837,
+    "titre": "Sauce tomate",
+    "cat": "Sauce",
+    "vege": true,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?q=80&w=1170&auto=format&fit=crop",
+    "ing": "1 oignon\n1 gousse d’ail\n500g de pulpe de tomate\n1 concentré de tomate",
+    "inst": "Faire revenir l’oignon.\nVerser la pulpe de tomate.\nÉmincer l’ail et assaisonner.\nLaisser mijoter à feu doux.",
+    "note": 5,
+    "fav": false
+  },
+  {
+    "id": 1770348914285,
+    "titre": "Sauce bolognaise",
+    "auteur": "Maman",
+    "cat": "Sauce",
+    "vege": false,
+    "portions": 4,
+    "img": "https://plus.unsplash.com/premium_photo-1664472619078-9db415ebef44?q=80&w=1076&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 oignon\n1 gousse d’ail\n500g de pulpe de tomate\n1 concentré de tomate\n400g de hachis de boeuf",
+    "inst": "Faire revenir le hachis avec l’oignon émincé. \nVerser la pulpe de tomate et rincer pour récupérer la sauce restante et rajouter le concentré de tomate.\nÉmincer l’ail et le rajouter avec sel, poivre, basilic et thym.\nRajouter un morceau de sucre pour l’acidité.\nLaisser mijoter une bonne demi-heure à feu doux.",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770349076054,
+    "titre": "Vinaigrette classique",
+    "auteur": "Maman",
+    "cat": "Sauce",
+    "vege": true,
+    "portions": 4,
+    "img": "https://plus.unsplash.com/premium_photo-1664392068994-9277c9ed4837?q=80&w=757&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 oignon\n1 gousse d’ail\nSel, poivre, maggi\n8 cuillères à soupe d’huile de colza\n6 cuillères à soupe de vinaigre balsamique",
+    "inst": "Éplucher et émincer l’oignon et l’ail avant de les mettre dans un saladier.\nSaler, poivrer et mettre du Maggi.\nRajouter l’huile de colza et le vinaigre balsamique.\nBien mélanger et verser sur la salade. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770349120164,
+    "titre": "Vinaigrette variante",
+    "auteur": "Maman",
+    "cat": "Sauce",
+    "vege": true,
+    "portions": 4,
+    "img": "https://plus.unsplash.com/premium_photo-1664392068994-9277c9ed4837?q=80&w=757&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 oignon\n1 gousse d’ail\nSel, poivre, maggi\n8 cuillères à soupe d’huile de colza\n½ cuillère à soupe de moutarde\n7 cuillères à soupe de vinaigre Melfor",
+    "inst": "Éplucher et émincer l’oignon et l’ail avant de les mettre dans un saladier.\nSaler, poivrer, mettre du Maggi et la moutarde.\nRajouter l’huile de colza et le vinaigre Melfor.\nBien mélanger et verser sur la salade. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770349200447,
+    "titre": "Béchamel",
+    "auteur": "Maman",
+    "cat": "Sauce",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x316/a/1/043ce758abd503e6615dea8c0725010e053fa78692a9dad8df5526b084877a/OIP.SGkCMj2wlAr-I8vRag_0qgHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.SGkCMj2wlAr-I8vRag_0qgHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "25g de beurre environ\n25cl de lait environ\nFarine\n10cl de crème fraîche environ\nSel, poivre\nMuscade\n",
+    "inst": "Faire fondre le beurre à feu doux. \nAjouter 2 cuillères à soupe de farine tout en remuant au fouet.\nRajouter environ 25 cl de lait en continuant de mélanger.\nAjouter de l’eau ou l’eau de cuisson d’un chou-fleur ou d’endives, etc.\nUne fois la consistance désirée atteinte, couper le feu et ajouter la crème fraîche.\nAssaisonner. \n",
+    "note": 5,
+    "fav": true
+  },
+  {
+    "id": 1770354119669,
+    "titre": "Pizza",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "Pâte à pizza\n1 boite de concentré de tomate\n1 gros oignon \n1 poivron vert\nChorizo (tranches)\n1 à 2 gousses d’ail (selon taille)\n2 tranches de jambon \n1 petite boite de champignons\n1 boule de Mozzarella \n1 sachet de fromage spécial pizza\nOrigan\nBasilic\nOlives, câpres en agrément\n",
+    "inst": "Mettre le concentré de tomate dans un bol, assaisonner avec le sel, le poivre, le basilic et l’ail émincé. Bien mélanger. Etaler sur la pâte après l’avoir passé au four. \nMettre la pâte dans le plat à cet effet, piquer avec une fourchette toute la surface. Mettre un filet d’huile d’olive sur l’ensemble de la pâte. Mettre la pâte (seule) au four pendant 5 minutes “chaleur tournante” 220° (ou programme pizza). \nUne fois cuite, garnir la pâte. Finir avec le fromage et l’origan. \nEnfourner 15/20 minutes (regarder régulièrement pour adapter le temps de cuisson) à 220° chaleur tournante (programme pizza). \nServir.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354209247,
+    "titre": "Flammekueche",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1571501210331-41105cb1b3e7?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 pâte à flamme\nPot de préparation à tarte flambée \n½ barquette de lardons\n4 oignons minimum\nGruyère ou tout autre fromage",
+    "inst": "Émincer les oignons en lamelles. \nMettre la pâte dans le plat prévu à cet effet, la recouvrir de la préparation crémeuse avant d’y ajouter les autres ingrédients. \nEnfourner 10/15 minutes chaleur tournante 220° (regarder régulièrement pour adapter le temps de cuisson) : indiqué sur l’emballage de la pâte ou du pot de préparation. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354318741,
+    "titre": "Mexicain",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1569692062823-f1196218f0a2?q=80&w=986&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "Wraps / Fajitas\nSachet d’épices à fajitas\n2 bocaux sauce Odelpasso à fajitas (mild)\n2/3 sachets de gruyère râpé (petits)\nSalade verte au choix \n1 poivron vert\n1 tomate\n1 oignon\nMaïs\nGuacamole éventuellement\nEscalopes de poulet",
+    "inst": "Couper les escalopes de poulet en lamelles. Assaisonner la viande (sel, poivre). Les faire revenir dans une grande casserole ou wok. \nY ajouter la sauce et les épices (environ ½ sachet) et laisser mijoter à feu doux pendant une trentaine de minutes. \nCouper les différents ingrédients en cubes et les réserver dans des bols pour le service. Attention, la tomate doit être vidée et épépinée : coupée en deux, vider à la cuillère et couper en lamelle tel un poivron. \nTrancher la salade en lamelles. Servir. \nMouiller les wraps pour en conserver le moelleux. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354418385,
+    "titre": "Cassoulet",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1603227441582-d076c3836f36?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 paquet d’haricot lingot (500g)\nPoitrine fumée\nPoitrine fraîche\nSaucisse à cuire\nViennoise\nLioner \nGros sel\nPoivre\n1 boite de concentré de tomates\n2 feuilles de laurier \nThym\nPersil\n1 oignon\n2 ails\nClous de girofle\n",
+    "inst": "La veille, faire tremper environ 200g (pour 2 personnes) d’haricot dans un récipient. Ils doivent être couverts d’eau. \nCouper en morceaux les poitrines et les saucisses. Les faire rapidement revenir dans une sauteuse ou wok (il faut assez de profondeur) puis réserver. Dans la graisse restante, faire revenir l’oignon émincé (grossièrement). \nY ajouter les haricots AVEC leur eau. Rajouter l’ail coupé grossièrement, 2 feuilles de laurier, des clous de girofle, le persil, le thym, du poivre, du gros sel et le concentré de tomate.  Porter le tout à ébullition (avec couvercle) puis y ajouter la viande cuite. Laisser mijoter pendant 45 minutes avec le couvercle en remuant régulièrement. \nContrôler en goûtant que les haricots sont cuits. Si c’est le cas, ajouter la lioner et les viennoises coupée en rondelles. Laisser mijoter 5/10 minutes en remuant. \nServir. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354489475,
+    "titre": "Gnocchis au hachis",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1691775755613-57ceabbac866?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 paquet familial de gnocchis (à bouillir) OU 250g de petites coquillettes \n500g de hachis mélangé\nSel, poivre\nPréparation pour jus de rôti\n1 oignon\n1 ail\n",
+    "inst": "Émincer l’ail et l’oignon finement. Faire revenir le hachis avec l’ail et l’oignon. Assaisonner. On peut rajouter une pincée de piment/paprika pour relever le goût. \nAjouter le jus de rôti et couvrir le hachis avec de l’eau. Mélanger et laisser mijoter à couvert une bonne ½ heure en remuant régulièrement. \nSi besoin, on peut épaissir la sauce avec de la maïzena. \nFaire cuire les gnocchis selon les recommandations du paquet et les ajouter au reste. Mélanger pour qu’ils prennent le goût et servir. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354581903,
+    "titre": "Nuages",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://www.chezpatchouka.com/wp-content/uploads/2020/08/Mehlknepfles-aux-lardons-et-a-la-creme-fraiche-recette-alsacienne.jpg",
+    "ing": "Farine \n3 œufs\n1 barquette de lardons (peut être échangé avec des croûtons de pain)\nSel, poivre\nMaggi\nLait\n50 cl de crème fraîche\n",
+    "inst": "Dans un cul de poule, casser les œufs. Assaisonner généreusement. Battre à la cuillère de bois (PAS DE FOUET). Rajouter un peu de farine, mélanger.\nDiluer le lait dans une tasse avec de l’eau (1/2 de chaque). Rajouter de la farine ou du lait en fonction de la texture jusqu’à atteindre celle souhaitée : la farine épaissit, le lait désépaissit. \nA côté, mettre environ 1L d’eau à bouillir avec du gros sel. Une fois à ébullition, prendre une cuillère à soupe et la tremper dans l’eau chaude longuement (elle doit être chaude comme la braise). Baisser le feu sous l’eau pour maintenir à température. \nPrendre de la pâte avec la cuillère chaude et mettre dans l’eau. Patienter quelques secondes entre chaque pelletée. \nQuand l’ensemble des morceaux sont dans l’eau, mélanger immédiatement. Remettre à ébullition non couvert puis, une fois atteint, mettre à feu doux pendant un bon ¼ d’heure. \nEn attendant, faites revenir les lardons ou les croûtons dans une poêle. Y ajouter la crème. Assaisonner avec du sel et du poivre. \nÉgoutter les nuages puis les verser dans un saladier. Y verser la mixture, mélanger et servir. \n\n🡪 VARIANTE : la crème peut être remplacée par de la sauce tomate ou de la sauce brune.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354751175,
+    "titre": "Cannelloni",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x448/b/e/3c458c5337f26df7f647e78be525215cba266a92cd648e2c9e5125bb513896/OIP.g_w5hiwAs_LX9r4ehpH-gwHaHA.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.g_w5hiwAs_LX9r4ehpH-gwHaHA%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "Cannelloni (Leclerc)\n500g d’hachis mélange\n1 oignon\n1 ail\nSel, poivre\nPain de mie (1 si grande tranche, 2 si petites)\nLait\nChapelure\nPersil\n1 œuf \n1 paquet de gruyère\nParmesan (facultatif)\n",
+    "inst": "Préparer une sauce tomate (cf. recette concernée).\nMettre dans une assiette creuse la tranche de pain, y ajouter le lait pour la ramollir. \nÉmincer l’ail et l’oignon finement. \nDans un cul de poule, mettre le hachis préalablement décongelé, l’œuf entier, le sel et le poivre ainsi qu’une poignée de chapelure. Ajouter ail et oignon, puis persil. \nRetirer la croûte du pain de mie et essorer le pain. Rajouter dans le hachis et mélanger l’ensemble. \nFourrer les cannellonis avec délicatesse car fragile. \nLes disposer dans un plat allant au four. Recouvrir de sauce tomate chaude. Ajouter le gruyère et le parmesan. \nMettre au four selon les indications présentes sur le paquet de cannelloni : 180° chaleur tournante pendant une quarantaine de minutes. Servir. \nPeut se préparer en amont et être entreposé au frigo avant enfournement mais, dans ce cas, n’ajouter le gruyère qu’au moment d’enfourner.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354818190,
+    "titre": "Boulettes",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1515516969-d4008cc6241a?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "500g d’hachis (peu importe lequel)\n1 oignon\n1 ail\nSel, poivre\nPain de mie (1 si grande tranche, 2 si petites)\nLait\nChapelure\nPersil\n1 œuf ",
+    "inst": "Mettre dans une assiette creuse la tranche de pain, y ajouter le lait pour la ramollir. \nÉmincer l’ail et l’oignon finement. \nDans un cul de poule, mettre le hachis préalablement décongelé, l’œuf entier, le sel et le poivre ainsi qu’une poignée de chapelure. Ajouter ail et oignon, puis persil. \nRetirer la croûte du pain de mie et essorer le pain. Rajouter dans le hachis et mélanger l’ensemble. \nFaire des boules ou des galettes (au choix). Faire revenir comme de la viande classique.  ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770354923564,
+    "titre": "Escalopes à la crème",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x248/e/9/d750bc5ee2280cb8638039fefcb9ccb42a13915c6fe3b4490d2420a64b6911/OIP.xixTzQUnq9pUhbL239LWJQHaD4.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.xixTzQUnq9pUhbL239LWJQHaD4%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 escalope de veau si grande (ou dinde)\n500g de champignons\n50 cl de crème fraîche\n400g de tagliatelles fraîches\nSel, poivre\n",
+    "inst": "Faire cuire les champignons jusqu’à ce qu’ils soient secs. Si congelés, laisser dégorger le matin même. \nFaire revenir l’escalope (faire bien griller). Réserver. Faire griller les champignons dans le jus de cuisson de l’escalope. Rajouter la crème et assaisonner. \nFaire cuire les tagliatelles selon les recommandations du paquet. \nRemettre l’escalope dedans pour la réchauffer. On peut la couper en morceaux si préféré. Mélanger avec les pâtes. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355011872,
+    "titre": "Curry Wurst",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x266/a/f/853b1091bd16776b86e1206a2aa643c36c81ce83fabb31fce2f6a87e807a24/OIP.ukI3IFu-pD_gy2ETspTdXgHaEK.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.ukI3IFu-pD_gy2ETspTdXgHaEK%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "4 saucisses (merguez et/ou blanches)\n1 oignon\n500g de pulpe de tomate\n1 concentré de tomate\n3 cuillères à soupe de curry\n1 cuillère à soupe de moutarde\n2 cuillères à soupe de ketchup\nSel, poivre\nRiz \n",
+    "inst": "Émincer l’oignon et faire revenir dans une poêle.\nY ajouter la pulpe de tomate, le concentré de tomate et assaisonner avec sel, poivre, curry, moutarde et ketchup.\nFaire revenir les saucisses.\nQuand elles sont bien grillées, les couper en rondelles et les ajouter à la sauce.\nLaisser mijoter une bonne demi-heure.\nFaire cuire le riz et l’ajouter au reste pour donner du goût. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355064069,
+    "titre": "Tartiflette",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x316/f/8/d7b29f3960dd2be58dc3b3c9cfb15641c95951f59b3dbd5b579ec8a9413b4c/OIP.1-H5rSyiSkDSVGQx5YddxgHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.1-H5rSyiSkDSVGQx5YddxgHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "Quelques patates\nUn fromage à tartiflette (1 petit suffit)\n1 gousse d’ail\nSel, poivre\n1 barquette de lardon\n",
+    "inst": "Faire bouillir les patates dans de l’eau avec la peau. A ébullition, baisser le feu et laisser cuire 20 minutes à couvert.\nUne fois cuite, les égoutter et les éplucher avant de les couper en tranches.\nLes laisser refroidir avant de les disposer dans un plat.\nRajouter l’ail émincé, le sel et le poivre.\nCouper le fromage en grosses tranches et le mettre sur les patates.\nPréchauffer le four à 180° (chaleur tournante) avant d’enfourner 10 minutes puis 10 minutes sur gratin. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355109738,
+    "titre": "Lasagnes",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1709429790175-b02bb1b19207?q=80&w=1032&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 paquet de lasagne fraîche\n500g de hachis de boeuf\n1 oignon\n1 gousse d’ail\n1 concentré de tomate\n1 grande brique de coulis de tomate (750g)\n1 petite boite de petit pois\n1 petite brique de béchamel\n1 morceau de sucre\nGruyère\nParmesan\nSel, poivre\nThym (ou herbes de provence)\nBasilic\nPiment\n",
+    "inst": "Faire une sauce bolognaise en y ajoutant petits pois, épices et sucre. Laisser cuire une bonne demi-heure. Préchauffer le four à 180°.\nDans un plat allant au four, alterner entre : légère couche de béchamel, un peu de sauce tomate, des tranches de lasagne, une couche de sauce.\nAprès cette première couche, remettre de la béchamel éparpillée, un peu de gruyère et finir avec la sauce tomate mais en garder assez pour tout recouvrir à la fin. \nCouvrir de gruyère et de parmesan.\nEnfourner pour 35 à 40 minutes. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355539301,
+    "titre": "Endives/poireaux au four",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x474/c/c/5700b9d5048dbb14678c6399cee1677525d66bac097a05e48a47b27d3821b7/OIP.0FAFJGIm6AdswleqBtcMawHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.0FAFJGIm6AdswleqBtcMawHaHa%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "4 endives ou 3 poireaux\n6 tranches de jambon\nGruyère râpé\n",
+    "inst": "Enlever le cœur de l’endive en les creusant, retirer les feuilles abîmées et coupez un petit bout du haut de l’endive. \nLes faire cuire dans de l’eau salée avec une cuillère de sucre pour l’amertume. A ébullition, laisser mijoter 20 minutes.\nLes égoutter dans une passoire afin de les laisser dégorger l’eau. Conserver l’eau de cuisson. Les faire cuire avant qu’elles soient bien sèches.\nPréparer une béchamel avec l’eau de cuisson des endives. \nPréchauffer le four sur 180°, chaleur tournante.\nPrendre une tranche de jambon et mettre de l’endive dessus (pas une entière) et rouler la tranche de jambon.\nDéposer les rouleaux dans un plat. \nNapper de béchamel avant de garnir de gruyère. \nEnfourner pour 20 minutes.\nPour des poireaux : les couper en deux tronçons chacun et procéder de la même manière. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355601214,
+    "titre": "Gratin de chou fleur",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x355/6/8/4329c46a57e04e7ef5cd10cca05700d5ef80bcdb789379b79bd3a9915370db/OIP.LglIR9Zk-UCvre4saSLmawHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.LglIR9Zk-UCvre4saSLmawHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 chou fleur\nQuelques patates\nSel, poivre\n",
+    "inst": "Découper les fleurs de chou fleur et éplucher les pommes de terre. Les couper en gros cubes et les faire bouillir dans de l’eau salée 20 minutes à couvert.\nLes égoutter et réserver le jus pour la béchamel. \nDisposer chou fleur et patates dans un plat et verser la béchamel dessus. Rajouter le gruyère râpé. \nMettre au four, préalablement préchauffé à 180°, chaleur tournante. \nEnfourner pour 20 minutes environ (le gruyère doit gratiner).\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355660004,
+    "titre": "Nouilles au four",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x355/3/2/dc3ae19cf54da341f96a06d16b8c808a19d7b92618ef13fdd9bddea919090a/OIP.6JZ9RXgTbdt0iIE0G6wjXwHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.6JZ9RXgTbdt0iIE0G6wjXwHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "250g de spaghettis courts\n½ barquette de lardons\n1 barquette de dés de jambon\n4 oeufs\n10cl de crème fraîche\n2 paquets de gruyère râpé\n1 petite boîte de champignons\nSel, poivre, Maggi\n",
+    "inst": "Faire bouillir les nouilles dans de l’eau salée. Les égoutter une fois cuites.\nRépartir la moitié des nouilles dans un plat, ajouter un peu de gruyère et étaler dés de jambon et champignons.\nBattre ensemble les œufs, le sel, le poivre, le maggi et la crème. \nRajouter le reste de nouilles et verser la préparation dessus.\nParsemer de gruyère et de lardons. \nMettre au four, préalablement préchauffé à 180° (chaleur tournante), et faire gratiner 20 minutes. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355729595,
+    "titre": "Vol au vent",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x248/a/5/24ff5902ff8711d5f3c840b0a1e22b1a3a9a6b08954c75cee32e4c5b4b3e94/OIP.-GHJtUL8rNHFQ0vW-7vcYQHaD4.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.-GHJtUL8rNHFQ0vW-7vcYQHaD4%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 poule\n200g de veau à bouillir\n6 carottes\n2 navets\n1 poireau\n3 pommes de terre\n1 oignon \n1 ail\n1 feuille de laurier\nSel, poivre\n20cl de crème fraîche environ\n\n\n1 cuillère à soupe de fond de veau\n1 cuillère à soupe de fond de volaille\n1 petite boite de champignons\n10cl de vin blanc environ",
+    "inst": "\n\nFaire cuire la viande avec 3 carottes entières (épluchées) et le reste des légumes coupés (les 3 carottes, navets, pomme de terre, ail et oignon) en dés ainsi que la feuille de laurier dans de l’eau (la viande doit être couverte). Saler, poivrer, et porter à ébullition avant de baisser la cuisson. Laisser cuire 1h à couvert. \n\nEn fin de cuisson, sortir la viande et les carottes. Couper ces dernières en tronçons.\nPréparer une béchamel en utilisant l’eau de cuisson de la viande jusqu’à obtention de la texture souhaitée.\nMettre la béchamel dans une poêle plus grande avec la viande, les carottes et les champignons égouttés. \nAjouter les éléments en gras et poivrer. \nLaisser mijoter 20 minutes et ajouter la crème fraîche. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355863951,
+    "titre": "Légumes farcis",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 2,
+    "img": "https://s2.qwant.com/thumbr/474x316/d/8/2a3a49772a766d7ac4e67b592a89dc147fd743f37bd80cefd416ff3616d28b/OIP.KCDvOX5vkeP75DT6ETAifQHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.KCDvOX5vkeP75DT6ETAifQHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "2 tomate (2 personnes)\n1 poivron (2 personnes : 1 moitié par personne)\n1 courgette (2 personnes)\n1 oignon\n1 gousse d’ail\n1 concentré de tomate\n1 poivron OU 1 courgette OU 2 tomates\nSel, poivre, huile d’olive\n\n\n500g de hachis mélange\n1 oignon\n1 gousse d’ail\n1 morceau de pain trempé du lait (facultatif, rend la farce + moelleuse)\nHerbes de provence\n1 oeuf\nChapelure\nSel, poivre",
+    "inst": "Nettoyer les légumes à farcir. \n→ Pour les courgettes : couper les extrémités, couper la courgette en 2 et la creuser pour enlever les pépins.\n→ Pour les tomates : couper le haut de la tomate à l’arrière (pas côté tige) pour la creuser. \n→ Pour les poivrons : couper le bout avec la queue, couper le poivron en 2 et retirer les parties blanches et les pépins. \nPréparer la farce en mélangeant tous les ingrédients. ⚠️Si le pain de mie est utilisé, essorer avant incorporation dans le mélange. \nFarcir les légumes, saler et poivrer légèrement. Les entreposer dans un plat. Enfourner à 180°, chaleur tournante, pendant ¾ d’heure.\nPréparer la sauce en coupant les légumes en petits cubes et les faire revenir avec de l’huile d’olive. Laisser mijoter 15 minutes. \nAjouter le concentré de tomate et de l’eau (équivalence 3 pots de concentré). Saler et poivrer puis ajouter les herbes avant de laisser mijoter ½h. \nLe riz d’accompagnement peut être cuit seul ou en risotto dans la sauce. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355925755,
+    "titre": "Mont d'Or au four",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x206/6/d/29c48b7e7dbf89e0a7811b8a6c3f621003e6cf66bb98ea564de9026672c548/OIP.MrYHzud4UnmGzXEmYX2fPQHaDO.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.MrYHzud4UnmGzXEmYX2fPQHaDO%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 Mont d’Or (taille en fonction du nombre de convives)\n1 gousse d’ail\n5 à 10cl de vin blanc\nSel, poivre\n",
+    "inst": "Préchauffer le four sur 180°, chaleur tournante. \nSortir le fromage de sa boîte mais le laisser sangler (le bois autour). L’entourer de papier alu et le remettre dans sa boite.\nCreuser un trou dans le fromage, le remplir de vin blanc, ajouter la gousse d’ail émincée. Saler et poivrer.\nPlacer le fromage dans un plat et enfourner jusqu’à ce que le fromage soit fondu. Compter 20 minutes.\nServir avec des pommes de terre en robe des champs et de la charcuterie. Peut s’accompagner d’une salade verte.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770355986432,
+    "titre": "Boeuf bourguignon",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1548869206-93b036288d7e?q=80&w=995&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "500g de boeuf à bourguignon\n½ barquette de lardons\n1 boite de champignons entiers\n2 carottes\n2 oignons\n1 gousse d’ail\n1 feuille de laurier\n1 pointe de cuillère à café de cacao ou un carré de chocolat noir\n3 cuillères à soupe environ de farine (au pifomètre)\n25cl de vin rouge (1 petite bouteille)\nMaizena\nSel, poivre\n1 jus de rôti\n",
+    "inst": "Émincer les oignons et les carottes.\nFaire griller la viande dans une poêle avec de la margarine. Saler et poivrer.\nQuand la viande est bien grillée, la déposer dans une assiette. \nMettre le vin rouge sur feu fort et laisser cuire pour évacuer l’alcool. Ajouter les oignons et la farine, faire revenir. \nAjouter les carottes et l’ail émincé, ainsi qu’un peu d’eau. \nMettre les lardons, la feuille de laurier, le chocolat et le jus de rôti. Saler et poivrer. \nBien mélanger le tout. \nRemettre la viande dans la poêle et couvrir d’eau. \nPorter à ébullition puis laisser mijoter à couvert pendant 2h. \nServir avec des knepfles, des spaetzles ou des pfanni (boule de pomme de terre). \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356031679,
+    "titre": "Poulet rôti",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 poulet fermier (jaune de préférence) et d’Auvergne si possible\nSel, poivre\nHuile d’olive\n",
+    "inst": "Préchauffer le four à 200°, chaleur tournante.\nMettre le poulet dans un plat allant au four. \nCouper le morceau de peau au bout du poulet (côté charnu) afin de libérer l’accès et de saler et poivrer l’intérieur.\nPiquer le poulet à différents endroits avec un couteau (pour libérer le jus : éviter au AirFryer).\nBadigeonner légèrement le poulet avec de l’huile d’olive. \nEnfourner le plat. \nUne fois que le poulet est bien grillé, baisser la température à 150°.\nArroser régulièrement le poulet avec son jus de cuisson. \nLe temps de cuisson total est estimé à 1h. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356097131,
+    "titre": "Macaronis poêlés au poulet et à la tomate séchée",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x248/8/6/cc526e674960dce594064d7162c21cae8d3f54901c4db11c103642cdcbff29/OIP.YDNPoaGuOV2aXSbu0sKZxQHaD4.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.YDNPoaGuOV2aXSbu0sKZxQHaD4%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "250g de macaroni\n140g de tomates séchées\n2 escalopes de poulet\n4 cuillères à soupe de crème fraîche\n1 échalote\nPersil\nSel, poivre\n",
+    "inst": "Faire cuire les nouilles. \nPeler et hacher l’échalote. Détailler les tomates séchées en petits dés. \nCouper le poulet en cubes.\nFaire fondre le beurre dans une poêle et y faire revenir le poulet et l’échalote.\nAjouter les tomates. Saler et poivrer avant de bien remuer. Laisser cuire environ 10 minutes.\nAjouter la crème, bien mélanger.\nAjouter les pâtes égouttées, mélanger et parsemer de persil. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356154856,
+    "titre": "Poulet à l'ananas sauce aigre douce",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x355/3/c/9920d1a1229aadcbab87ebf4c3e44f5f594b1c60b50af17ecf8586f43c4142/OIP.Vi-fiiv6Rtg-qGqmWHyr0wHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.Vi-fiiv6Rtg-qGqmWHyr0wHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "4 cuillères à soupe de Melfor\n2 cuillère à café de sel\n½ cuillère à soupe de maïzena ou de farine\nHuile de tournesol\n4 escalopes de poulet\n2 cuillères à soupe de concentré de tomate (1 boîte)\n1 gousse d’ail\n1 boite d’ananas (environ 250g)\n5 cuillères à soupe d’eau",
+    "inst": "Couper les escalopes en petits morceaux et réserver.\n\nPour la sauce aigre douce : \n→ Hacher finement l’ail.\n→ Mélanger l’ail, le concentré de tomate, le sel, la maïzena, le vinaigre et l’eau jusqu’à obtenir un mélange homogène. \nDans une poêle, verser un peu d’huile et ajouter le poulet. Cuire pendant 10 minutes. \nA mi-cuisson, ajouter la sauce aigre douce et l’ananas (en morceaux).\nLaisser mijoter jusqu’à ce que le poulet soit doré et, s’il n’y a pas assez de sauce, la rallonger avec le jus de l’ananas. \nServir avec du riz. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356209557,
+    "titre": "Truites",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 1,
+    "img": "https://s2.qwant.com/thumbr/474x265/5/a/284516a9b93d7beb40830b53599194573f038e90df969dd864e53446812ce4/OIP.Psoeol69GVHL3IrL1SwWhAHaEJ.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.Psoeol69GVHL3IrL1SwWhAHaEJ%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 truite (arc-en-ciel) par personne\n1 oignon\n1 feuille de laurier\nPersil\nSel, poivre\nFarine",
+    "inst": "Ecailler les truites (gratter les écailles), les laver et couper toutes les nageoires.\nDéposer les truites dans une assiette avec de l’essuie-tout afin de les sécher.\nSaler et poivrer l’intérieur de la truite.\nCouper l’oignon en fine rondelle et les insérer dans la truite avec le persil et une feuille de laurier.\nFariner légèrement les truites de chaque côté.\nDans une poêle, mettre du beurre et faire fondre avant d’y déposer la truite. Faire dorer chaque côté : environ 15 minutes par face.\nServir avec du riz. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356296676,
+    "titre": "Cordon bleu",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x316/7/2/510df25f6e0330a404e65424ab3cc312fcab545099512f36558c3386f408eb/OIP.A8XfIGyn7w8QrRAsXubd9QHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.A8XfIGyn7w8QrRAsXubd9QHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 escalope de dinde (demander au boucher de la couper pour faire un cordon bleu)\nMoutarde\n1 oignon\n1 tranche de jambon\n1 tranchette de fromage\nSel, poivre\n",
+    "inst": "Mettre l’escalope dans une assiette : la saler et la poivrer.\nBadigeonner de la moutarde sur l’escalope. \nPoser le jambon, l’oignon coupé en fines rondelles fines et le fromage sur une partie de l’escalope.\nRecouvrir avec l’autre moitié de l’escalope et bien la fermer avec des piques ou des cures-dents.\nFaire fondre le beurre dans une poêle et y mettre la viande. \nLa faire griller des deux côtés à feu vif et ensuite laisser mijoter pendant une vingtaine de minutes, en retournant régulièrement. \nServir avec des patates et des petits pois/carottes.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356363296,
+    "titre": "Côties au miel",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x315/7/a/e71f37b29ca3903dbe039af275d447cb7be114296193e4a91cb1cd7e181eab/OIP.D_x_yu48_CayKKXSO8XGkwHaE7.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.D_x_yu48_CayKKXSO8XGkwHaE7%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "Travers de porc (environ 6 ribs)\n1 cuillère à soupe de moutarde\n3 cuillères à café de soja sucré\n2 cuillères à café de paprika\n1 cuillère à soupe de sucre roux\n1 cuillère à café d’huile d’olive\n6 cuillères à soupe de ketchup\n3 cuillères à café de miel\n2 cuillères à café de piment\n4 gousses d’ail hachées\n2 cuillères à café de maïzena\nSel, poivre\n",
+    "inst": "Dans un saladier, préparer la marinade en mélangeant l’ensemble des ingrédients.\nAjouter les travers de porc : bien enrober la viande avec la marinade.\nLaisser reposer au minimum 1 heure et demi.\nPréchauffer le four à 190°, chaleur tournante. \nDéposer la viande dans un plat et laisser cuire une demie heure.\nCuire les travers de porc en mode grill pendant une vingtaine de minutes.\nBadigeonner la viande avec la marinade et la retourner à mi-cuisson. \nServir.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356442764,
+    "titre": "Burger de champi glacé au balsamique",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 2,
+    "img": "https://s1.qwant.com/thumbr/474x314/b/c/223b3641dc1736ed9ac797b81a2ef0eef5297ad5783c2ffa3e290d76128332/OIP.P-pajdq4hNNm4vl27C8cYgHaE6.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.P-pajdq4hNNm4vl27C8cYgHaE6%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "2 pains à burger (adapter si plus)\n2 champignons Portobello\nSauce aïoli (ou mayonnaise simple)\n2 cuillère à soupe de vinaigre balsamique (simple ou noir)\nQuelques patates\n1 oignon si gros (rouge ou jaune)\n40g de fromage râpé type parmesan\n1 salade\nÉpices italiennes (basilic, origan, poudre d'ail, romarin et thym)\nSel, poivre\n1 cuillère à café de sucre\n2 cuillère à soupe d’huile d’olive\n",
+    "inst": "Pour les potatoes : couper les patates en potatoes\n→ Au Cookéo (avec extra crisp) : les mettre dans la cuve préalablement huilée. Saler, poivrer et ajouter des épices italiennes selon son goût. Mettre le programme 3 pendant 20 à 25 minutes. Remuer au signal sonore de mi-cuisson. \n→ Au four : les mettre sur une plaque de cuisson avec du papier sulfurisé. Ajouter un filet d’huile d’olive, assaisonner comme au Cookéo et enfourner 25 minutes en chaleur tournante à 230°. Remuer à mi-cuisson. \nCouper le pied des Portobello préalablement lavés et couper les oignons en demi-lune (couper en 2 et émincer chaque partie).\nDans un bol, mélanger les 2 cuillères à soupe de vinaigre balsamique avec sel, poivre, sucre et une pincée d’épices italiennes. \nDans une poêle précédemment huilée, faire revenir les oignons 8 à 10 minutes à feu moyen pour qu’ils soient bien colorés. Les réserver.\nRemettre un filet d’huile d’olive (ou le faire dans une poêle séparée) et faire dorer les Portobello 8 à 10 minutes à feu moyen (côté creux vers le bas). Appuyer délicatement dessus avec une spatule de temps à autre.\nUne fois cuit, les retourner et les garnir de parmesan. Les déglacer avec le mélange de vinaigre puis couvrir immédiatement en laissant fondre le fromage quelques minutes.\nDresser les burgers (préalablement passés au grille-pain) en mettant de la sauce aïoli, quelques feuilles de salades, déposer les Portobello (creux vers le haut), rajouter les oignons et refermer. \nServir avec les potatoes et, éventuellement, une petite salade (le surplus de vinaigre peut être utilisé).  \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356546090,
+    "titre": "Protkrummier",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x474/e/a/cdff7340d4c17c1e0945a4f548edf66c244eb46a96fc5d14a5ca3481993f2c/OIP.Q0JdS1XXwqyzkRelEjLsMwHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.Q0JdS1XXwqyzkRelEjLsMwHaHa%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "3 patates/personne\n1 oignon\nMargarine\nSel, poivre\n",
+    "inst": "Éplucher les patates et les couper en frites. Couper grossièrement les oignons en lamelles.\nFaire fondre le beurre dans une poêle adaptée à la quantité de patates. Y mettre lesdites patates et les assaisonner. \nLes faire revenir à feu vif. Une fois qu’elles sont brunies (voire cramées), rajouter l’oignon et couvrir. Laisser mijoter à feu doux, en remuant régulièrement, de 15 à 30 minutes en fonction des patates.\nPiquer pour vérifier la cuisson des tubercules. Servir. \nAccompagné d’une omelette et d’une salade, par exemple. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356644298,
+    "titre": "Purée",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x270/c/2/27bd953411e3af632cf6ec4579bebb1f383f926f85f59ef300bcb8cdbd30f3/OIP.0dG8aXf6RUscfQ2yYI7sVgHaEO.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.0dG8aXf6RUscfQ2yYI7sVgHaEO%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "3 patates/ personnes \nEnviron 10g d beurre\nGros sel\nMuscade\nLait\n",
+    "inst": "Éplucher les patates et les couper en grosses frites. \nLes placer dans une casserole avec de l’eau (elles doivent être couvertes), ajouter 2/3 pincées de gros sel. Porter le tout à ébullition (sans couvercle) et baisser à feu doux. Laisser mijoter 20 minutes.\nPiquer pour vérifier la cuisson. Dans un cul de poule, verser le beurre, un peu de muscade. \nEgoutter les patates à la passoire. Les ajouter dans le cul de poule. \nFaire chauffer une tasse de lait au micro-onde. Écraser les patates avec le presse-purée avant d’ajouter le lait. Mélanger et ajouter du lait pour obtenir la texture désirée. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770356976030,
+    "titre": "Poêlée de champignons",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x506/0/0/e2fd65b075ea35ca0b84d882035ac336b3a4be6e2c56abe36f4e365b9ade57/OIP.5qnslCPQgzM-tjJv-9bZMgHaH6.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.5qnslCPQgzM-tjJv-9bZMgHaH6%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "2 ails\nChampignons\nPersil\nSel, poivre\nUn bon morceau de beurre\n",
+    "inst": "Mettre les champignons dans la poêle, faire chauffer à feu vif jusqu’à ce qu’ils crachent de l’eau puis baisser à feu doux. Si congelés, compter un bon quart d’heure.\nEmincer l’ail.\nMettre du beurre dans la poêle (sans la rincer). Quand il est fondu, rajouter les champignons égouttés puis l’ail émincé. Rajouter le persil de façon généreuse, saler et poivrer. \nBien mélanger, laisser cuire à feu doux jusqu’à ce qu’ils soient grillés. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357058891,
+    "titre": "Epinards",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x268/4/4/80d1f55177a58f3c79f87f8633afc6977031a37da64d811635ac064cf0694e/OIP.USH9AmeKmzZwzUI40gCVRwHaEM.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.USH9AmeKmzZwzUI40gCVRwHaEM%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 oignon\n1 gousse d’ail\n1 feuille de laurier\nEpinards branches (surgelé)\nSel, poivre\nMuscade (facultatif)\n",
+    "inst": "Éplucher et émincer l’oignon et l’ail.\nFaire revenir les oignons et, dès qu’ils sont bien dorés, ajouter les épinards, l’ail, le laurier et les épices. \nLaisser cuire environ 20 minutes à feu doux couvert.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357120714,
+    "titre": "Patates sautées",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1604752466673-f73b5b0daa75?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "3 patates/personne (4 si petites)\nHuile de tournesol\nSel, poivre\n",
+    "inst": "Éplucher les patates et les couper en dés pas trop petits.\nHuiler la poêle et, une fois chaude, ajouter les patates. Assaisonner.\nUne fois grillées, baisser le feu et laisser cuire une bonne demi-heure.\nLes piquer avec un couteau pour vérifier la cuisson.\nFacultatif : on peut ajouter une gousse d’ail émincée en fin de cuisson.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357176102,
+    "titre": "Tomates provençales",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x362/f/7/b3ee15c4dcc646de0a24a69891bc620c126a660e3f734e1d19058490d848e1/OIP.aV_KpGHczon1ynopRX8AVQHaFq.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.aV_KpGHczon1ynopRX8AVQHaFq%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "2 tomates\n1 gousse d’ail\nHerbes de provence\nHuile d’olive\nSel, poivre\n",
+    "inst": "Laver les tomates et les couper en 2 avant de les disposer dans un plat allant au four.\nEmincer l’ail.\nAssaisonner les tomates et y ajouter l’ail, les herbes de Provence et finir avec un filet d’huile d’olive.\nMettre au four, préalablement préchauffé à 180°, et laisser cuire 20 minutes. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357313242,
+    "titre": "Tartines à l'ail",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 2,
+    "img": "https://cache.marieclaire.fr/data/photo/w1000_c17/cuisine/48/paillail.webp",
+    "ing": "1 baguette\nBeurre\nAil\n",
+    "inst": "\n\nCouper la baguette en 2 et couper une moitié au milieu. Utiliser la baguette entière pour 2 personnes. \nÉmincer l’ail finement (1 gousse par tartine).\n\nBeurrer les tartines et mettre l’ail dessus. \nEnfourner à 180°, chaleur tournant, pendant 10 minutes environ (le temps que le pain soit doré).\nServir en accompagnement de nouilles à la sauce tomate (bolo ou simple).\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357352637,
+    "titre": "Chou rouge",
+    "cat": "Accompagnement",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x266/c/1/5e9a570800a9aeae931afb3c028e207e468f59ba88abbb04b39c0b6c51fc0a/OIP.jkeOCkW_Vo0UVcIbQ0wdFgHaEK.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.jkeOCkW_Vo0UVcIbQ0wdFgHaEK%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 chou rouge\n1 oignon\n1 gousse d’ail\nSel, poivre\n1 pomme Golden\n1 verre (à moutarde) de vinaigre Melfor\n1 feuille de laurier\nMargarine\n",
+    "inst": "Couper le chou rouge en 2 et couper chaque moitié en fines lamelles (arrêter dès qu’il n’y a plus de partie rouge).\nCouper grossièrement la pomme.\nDans une casserole, mettre le chou, la pomme, le vinaigre, la feuille de laurier, du gros sel et du poivre.\nRecouvrir d’eau et porter le tout à ébullition. \nLaisser cuire à feu doux et à couvert pendant une bonne heure. Vérifier la texture du chou : il ne doit pas être dur.\nÉgoutter dans une passoire. \nMettre la margarine dans une poêle et la faire fondre. Ajouter l’oignon émincé et le faire dorer. \nMettre ensuite le chou rouge et l’ail et bien mélanger. \nRectifier l’assaisonnement si nécessaire et laisser cuire un petit ¼ d’heure en remuant régulièrement.\nOn peut faire revenir des lardons avec les oignons pour varier le goût.\nAccompagne très bien les viandes en sauce. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357475222,
+    "titre": "Ail en chemise",
+    "cat": "Accompagnement",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x355/5/4/5ef6e217f1c2c9584e89e2dd48f986a418f6222fda5f40efc2c4bdb17ad3ce/OIP.MGkLq0yUPOKsRcRfwPB1JQHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.MGkLq0yUPOKsRcRfwPB1JQHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 tête d'ail",
+    "inst": "Les mettre tels quels (enlever les peaux superflus) dans le plat avec le jus de la viande (gigot, poulet…) et laisser 20 minutes environ. \nPeut se faire avec de l’eau mais le goût sera différent. \nAccompagne très bien le gigot d’agneau en particulier. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357535514,
+    "titre": "Salade de carottes",
+    "cat": "Salade",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x266/b/a/bb803e5b962ab79cabf8134203234967462bf92c0da382add1dd23a82b9524/OIP.egNjZyP_O6a9vhHi7CJM3gHaEK.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.egNjZyP_O6a9vhHi7CJM3gHaEK%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1kg de carottes\n1 oignon\n1 gousse d’ail\nSel, poivre, Maggi\n6 cuillères à soupe de Melfor\n8 cuillères à soupe d’huile de colza\n2 cuillères à soupe de crème fraîche\n",
+    "inst": "Éplucher les carottes et les râper finement (utiliser le Magimix) avant de les placer dans un saladier. \nÉmincer l’ail et l’oignon et les ajouter aux carottes.\nAssaisonner et rajouter la crème fraîche. \nBien mélanger et laisser reposer au moins 1h au frigo.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357592697,
+    "titre": "Salade de concombre",
+    "cat": "Salade",
+    "vege": true,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1610903122389-3674aafb17a5?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 concombre\nSel, poivre, Maggi\n3 cuillères à soupe de Melfor\n4 cuillères à soupe d’huile de colza\n1 cuillère à soupe de crème fraîche\n",
+    "inst": "Laver le concombre, enlever les extrémités et le couper en lamelles dans une passoire. Mettre du gros sel dessus, mélanger et laisser dégorger une ½ heure en remuant de temps en temps.\nMettre dans un saladier, assaisonner et ajouter la crème fraîche. \nBien mélanger et laisser reposer 1h au frigo.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357667844,
+    "titre": "Salade de petits pois",
+    "cat": "Salade",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x266/9/4/1c7a5c247cb40c29e1f5cb265cdd154fb101a0a0848bb9a554bb6f3173c19d/OIP.hFL1S8maYJCVrp_F5SeKLwHaEK.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.hFL1S8maYJCVrp_F5SeKLwHaEK%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 boite moyenne (ou 2 petites) de petits pois extra fins\nSel, poivre, Maggi\n3 cuillères à soupe de mayonnaise\n",
+    "inst": "Égoutter les petits pois et les mettre dans un saladier. \nAssaisonner, mettre la mayonnaise.\nBien mélanger et laisser reposer 1h au frigo.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357721886,
+    "titre": "Salade d'endives",
+    "cat": "Salade",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x248/4/2/f73450ea9adbe4619fb11fe5408591cc31c894fb2408b85d9344062fea1240/OIP.vyEHyJD-Folg9clAOlwYHQHaD4.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.vyEHyJD-Folg9clAOlwYHQHaD4%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "2 endives au détail ou un sachet de 3 ou 4\nVinaigrette à chou chinois\n",
+    "inst": "Creuser au couteau le bas de l’endive (le cœur blanc) avant de les couper tel un chou chinois. \nLes mettre dans un saladier et verser la vinaigrette ou mettre les endives dans la vinaigrette déjà faite dans le saladier. \nServir. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357797231,
+    "titre": "Taboulé / Salade de riz",
+    "cat": "Salade",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x357/e/a/190ca3fb12896e33d0a9f5f7eab17a2295367e44747627b4a483ceae950183/OIP.2lrVLFVSkV46X6rMGAiphQHaFl.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.2lrVLFVSkV46X6rMGAiphQHaFl%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "250g de semoule moyenne\n1 oignon\n1 poivron\n1 tomate\n8 cornichons\n5 càc de maïs\n1 boite de thon\n5 oeufs durs\nSel, poivre, Maggi\nMenthe\n8 càs d’huile de colza\n7 càs de Melfor\nHuile de tournesol\n",
+    "inst": "Faire bouillir de l’eau et mettre la semoule dans un saladier. Saler, poivrer et mettre un peu d’huile de tournesol.\nMélanger avec une fourchette pour que l’huile soit bien répartie sur la semoule.\nRecouvrir avec de l’eau bouillante et laisser reposer quelques minutes avant de mélanger avec la fourchette pour séparer les grains de semoule.\nÉplucher et émincer l’oignon. \nÉplucher, épépiner et couper le poivron en petits dés.\nVider la tomate et la couper en petits dés.\nÉgoutter le thon.\nCouper les cornichons en rondelles.\nPour les oeufs : faire bouillir de l’eau, mettre les oeufs dedans avec une cuillère (pour éviter la casse) sans baisser le feu et, à ébullition, baisser le feu pendant une douzaine de minutes ou utiliser un minut’oeuf. \nLes écaler et les couper.\nMélanger la garniture avec la semoule. Assaisonner et ajouter le Maggi, l’huile, le vinaigre et la menthe. \nBien mélanger et laisser reposer au moins 1h au réfrigérateur. \n\n🡪 VARIANTE : procéder de la même manière mais avec du riz pour une salade de riz. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357875981,
+    "titre": "Salade de tomates",
+    "cat": "Salade",
+    "vege": true,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1695627141920-9c283c5ec8b3?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "2 tomates\n1 petit oignon\n1 gousse d’ail\nSel, poivre, Maggi\nBasilic\n4 càs d’huile d’olive\n3 càs de Melfor\n",
+    "inst": "Couper les tomates en lamelles.\nÉmincer l’oignon (en lamelles) et l’ail.\nMettre les tomates dans un plat et y ajouter l’oignon et l’ail.\nAssaisonner et parsemer de basilic.\nMélanger délicatement et laisser reposer au moins 1h.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770357953208,
+    "titre": "Salade de patates",
+    "cat": "Salade",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x355/9/9/9f858f71a542ec80ae94f4cefbb3cebdb17a662efaedcc3d5745b967028d12/OIP.MxnRW2LkYvAe3P2RFuS1OAHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.MxnRW2LkYvAe3P2RFuS1OAHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "10 à 15 patates (selon taille)\n½ barquette de lardons\n1 oignon\n5 cuillère à soupe de colza\n4 cuillère à soupe de Melfor\nSel, poivre, Maggi\n",
+    "inst": "Couvrir d’eau les patates (non épluchées) et mettre à cuire. A ébullition, baisser le feu et laisser cuire 20 minutes.\nPiquer pour vérifier la cuisson et égoutter. Après qu’elles aient refroidies, les éplucher et réserver pendant 1h.\nLes couper en rondelles dans un saladier.\nÉmincer l’oignon et l’ajouter. \nFaire revenir les lardons (bien grillés) et les ajouter (avec leur graisse).\nAssaisonner l’ensemble, bien mélanger et laisser encore reposer 1h au frigo avant consommation. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358044777,
+    "titre": "Salade de haricots verts",
+    "cat": "Salade",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x256/a/7/47b4bf459f1e892935008323617ab76910d55783f13f550c9d342620ca5ef4/OIP.mqZDzTXMb0EKBY4kKt3M1gHaEA.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.mqZDzTXMb0EKBY4kKt3M1gHaEA%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 boîte moyenne de haricots verts extra fins (ou 2 petites)\n1 oignon\n1 gousse d’ail\n4 cuillère à soupe d’huile de colza\n3 cuillère à soupe de Melfor\nSel, poivre, Maggi\n",
+    "inst": "Égoutter les haricots et les mettre dans un saladier.\nÉmincer l’ail et l’oignon et les ajouter. \nAssaisonner, bien mélanger, et laisser reposer 1h.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358127070,
+    "titre": "Soupe aux légumes",
+    "cat": "Soupe",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x302/c/9/adb8e3d91f5c9eb71d08b2c49e08ebedaa1fcdffcae9ec9b77614d92a7e0b8/OIP.-VFSIcP_ufNieiQUowrrwwHaEu.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.-VFSIcP_ufNieiQUowrrwwHaEu%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 sachet de légumes à pot au feu (si disponible)\nSi pas de sachets : 3 carottes, 1 navet, 1 poireau\n3 ou 4 carottes EN PLUS du sachet\n1 navet EN PLUS\n2/3 patates\nBranche de céleri en option\nBouillon (poulet ou légume)\nGingembre en poudre\n1 oignon\n1 ail\nPoivre\n",
+    "inst": "Couper grossièrement le tout. Tout mettre dans une marmite et recouvrir d’eau. Ajouter le bouillon de volaille avec du poivre et une pincée de gingembre. Porter à ébullition avec couvercle puis laisser mijoter à feu doux environ ½ heure. \nMixer. Selon la texture, rajouter plus ou moins de jus ou un peu de beurre ou un peu de crème. \nÉventuellement réchauffer un peu sur feu après mixage. Goûter pour le sel et servir.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358189194,
+    "titre": "Chorba",
+    "cat": "Soupe",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x316/7/7/8cbdbdf40b25e680dc4f92fe449a9041542182fe90940e052ac3b1029651de/OIP.iFCOYTWdTAOhSxZJGm3ISQHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.iFCOYTWdTAOhSxZJGm3ISQHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "300g d’agneau (collier ou poitrine)\n1 oignon\n1 carotte\n2 navets\nCoriandre (1 barquette si fraîche)\nCannelle\nSel, poivre\nHuile d’olive\n1 boite de concentré de tomate\n1 boîte moyenne de pois chiches\n1 bouillon de poule\nNouilles langue d’oiseau\n1L d’eau\n",
+    "inst": "Couper l’agneau en petits morceaux et les légumes en petits dés.\nÉgoutter les pois chiches. \nFaire revenir l’agneau et les oignons pendant 5 minutes.\nAjouter les légumes, le concentré de tomate, la cannelle, le bouillon de poule et les pois chiches. Saler et poivrer. Bien mélanger et ajouter l’eau. \nLaisser cuire 40 minutes.\nPour de la coriandre fraîche, la couper et l'ajouter en fin de cuisson. Si elle est en poudre, la mettre avec les autres épices. \nPour les langues d’oiseau, les faire cuire à part selon les indications du paquet. NE SURTOUT PAS LES MÉLANGER AU RESTE : servir les 2 séparément. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358249184,
+    "titre": "Soupe d'orge perlée",
+    "cat": "Soupe",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x355/f/a/33dfb3a8a9b5ce11bc475e04f03ae2b433fc1ae353b5cefc779fc43b07fd46/OIP.Zd_jPdD0G2GNy8Ik-qT16AHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.Zd_jPdD0G2GNy8Ik-qT16AHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "200g de boeuf (jarret ou plat de côtes)\n150g de lardons\n1,75l de bouillon de boeuf\n120g d’orge perlée\n2 carottes\n1 poireau\n1 oignon\n3 cuillères à soupe de crème fraîche\nHuile d’olive\n2 pommes de terre\nSel, poivre\n",
+    "inst": "Faire cuire l’orge perlée 5 minutes à l’eau salée et égoutter (suivre instructions paquet).\nFaire revenir les lardons pendant 5 minutes.\nIncorporer l’orge perlée et mélanger pendant 3 minutes. \nAjouter le bouillon de bœuf et le bœuf coupé en cubes.\nAjouter les légumes coupés en cubes et le poireau en rondelles. Saler et poivrer. \nFaire cuire pendant 1h, à couvert. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358292016,
+    "titre": "Minestrone",
+    "cat": "Soupe",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1603105037880-880cd4edfb0d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 chorizo\n1 oignon\n1 gousse d’ail\n2 carottes\n2 navets\n1 poignée de haricots verts (ou 1 petite boîte)\n1 boîte de petits pois égouttés\n1 boîte moyenne de haricots rouges\n½ barquette de lardons\n1 poireau\n1 feuille de laurier\nSel, poivre\nNouilles type “Ditali”\nParmesan\n",
+    "inst": "Couper le chorizo en rondelles et émincer l’oignon et l’ail.\nCouper les légumes en petits dés et le poireau en fines rondelles. \nFaire revenir le chorizo (sans graisse) et ajouter l’oignon. \nAjouter les légumes, la feuille de laurier, l’ail, les lardons et les haricots rouges. Couvrir d’eau. \nSaler et poivrer avant de porter à ébullition avant de faire cuire à feu doux pendant 1h. \nFaire cuire les nouilles à part.\nPour servir, disposer les nouilles dans l’assiette et recouvrir de la soupe. Parsemer de parmesan. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358363038,
+    "titre": "Marbré",
+    "cat": "Dessert",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x270/d/d/b6ed818051f2478f67413fd2512abc4f04fd3b79ea98578224bacaf991854e/OIP.LAXT1lpe8fMhwrYqo4YHMQHaEO.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.LAXT1lpe8fMhwrYqo4YHMQHaEO%3Fcb%3Ddefcache2%26pid%3DApi%26defcache%3D1&q=0&b=1&p=0&a=0",
+    "ing": "250g de beurre\n300g de sucre fin\n1 sucre vanillé\n6 oeufs\n500g de farine\n1 sachet de levure chimique\n1 tasse de lait\n1 cuillère à soupe de cacao si chocolat\n",
+    "inst": "Mettre le beurre dans un récipient et le battre (Magimix).\nY ajouter le sucre fin puis vanillé tout en remuant.\nMettre 1 oeuf après l’autre en battant bien la pâte.\nAjouter la farine et la levure chimique, toujours en battant, et en versant un peu de lait lorsque la pâte devient trop difficile à battre.\nPour un  marbré au chocolat, mettre un peu de pâte dans un récipient à part et ajouter un peu de cacao avant de mélanger. \nMettre la pâte dans un plat et enfourner à 180° (pâtisserie) pendant 1h.\nPour un marbré au chocolat, verser d’abord la pâte blanche et ajouter celle au chocolat ensuite. Mélanger avec une fourchette pour que les deux s'harmonisent. \n⚠️ Pour le faire dans un moule à cake (long), diviser la quantité d'ingrédients par 2.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358405535,
+    "titre": "Gâteau vite fait",
+    "cat": "Dessert",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x474/4/7/05bea37042c768f546cb61de286c40dbf958f6f1ec9ef86c5d01e9296d3124/OIP.BuaWqSz9HkedlU97nsowawHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.BuaWqSz9HkedlU97nsowawHaHa%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "300g de farine\n300g de sucre fin\n3 cuillères à soupe de cacao\n1 verre de lait (verre à moutarde)\n1 verre d’huile de tournesol\n4 jaunes d’oeufs\n4 blancs d’oeuf en neige\n1 sachet de levure chimique\n1 sachet de sucre vanillée\n1 pincée de sel dans les blancs d’oeufs \n",
+    "inst": "Mélanger la farine, le sucre, le cacao, le lait, l’huile, les jaunes d’oeufs, la levure et le sucre vanillé (Magimix). Réserver. \nBattre les blancs en neige avec une pincée de sel (Magimix) avant de les incorporer délicatement au reste de la pâte. \nMélanger, toujours délicatement, avant de mettre l’ensemble dans un plat.\nEnfourner à 150° degrés (pâtisserie)pendant 1 heure. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358495377,
+    "titre": "Biscuits de Noël (Spritz)",
+    "cat": "Dessert",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x355/b/e/aa9e6cead2aa39d866073a0d667d8cd31ca62e6c4fa4a22463ec6e6939e9a8/OIP.DL-a5F2ju_8AmtbcBi5ofwHaFj.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.DL-a5F2ju_8AmtbcBi5ofwHaFj%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1kg de farine\n500g de sucre fin\n500g beurre ramolli\n4 oeufs\n2 sucre vanillé\n200g au choix : noix de coco, amande ou noisettes en poudre\n\nNÉCESSITE LA MACHINE A BISCUIT\n",
+    "inst": "Battre le beurre dans un cul de poule (de grande taille) et ajouter le sucre fin et vanillé, suivi des oeufs.\nMettre la farine petit à petit et finir de pétrir la pâte à la main afin d’obtenir une pâte homogène en boule. \nAjouter la poudre choisie (amande, noisettes, noix de coco) et bien mélanger. \nLaisser reposer 2 à 3h au frais. \nPréparer les biscuits avec la machine et les mettre sur un plat allant au four avec du papier de cuisson.\nEnfourner à 180°, chaleur tournante, pendant 15 à 20 minutes (par fournée).\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358548036,
+    "titre": "Grafouillis aux pommes",
+    "cat": "Dessert",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x316/5/b/a0aaea4877ff24041e63f9cfb8769ed70f05948445b35eb595ac1c22b3fca7/OIP.IehsYEqdyjspuC7aLBlfzwHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.IehsYEqdyjspuC7aLBlfzwHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "5 cuillères à soupe de farine\n4 cuillères à soupe de sucre fin\n3 cuillères à soupe de lait \n2 cuillères à soupe d’huile\n1 oeuf\n½ sachet de levure chimique\n3 pommes\n\n\n80g beurre\n100g de sucre\n1 sucre vanillé\n1 oeuf \n",
+    "inst": "Mélanger au fur et à mesure les ingrédients pour la pâte et y ajouter les pommes coupées en petits morceaux. \nMettre au four, préalablement préchauffé à 120°, pendant 25 minutes.\nPréparer le nappage et le verser sur le gâteau et remettre au four pendant 15 minutes. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358602765,
+    "titre": "Cake à la pomme et à la cannelle",
+    "cat": "Dessert",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/422x211/0/9/b01c87c44b246ac6b93511443c672bd92c72882c0ab55cafb83c295e25a631/OIP.b7Sab4DUCtUakuBC2mRPAAAAAA.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.b7Sab4DUCtUakuBC2mRPAAAAAA%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "3 oeufs \n170g de sucre fin\n150g de farine\n1 sachet levure\n150g de beurre\n1 pomme Golden\n1 pincée de cannelle\n",
+    "inst": "Préchauffer le four à 180°, chaleur tournante.\nDans un saladier, fouetter les oeufs avec le sucre, incorporez la farine, la levure et la cannelle.\nFaire fondre le beurre et le verser dans la pâte. Bien mélanger.\nPelez la pomme et la râper (ou la couper en petits morceaux) au-dessus de la préparation. Bien mélanger. \nVersez le tout dans un moule beurré et fariné avant d’enfourner 40 minutes.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770358640798,
+    "titre": "Gâteau au vin",
+    "cat": "Dessert",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x270/0/5/87719afc2b3026099fa3a7fe64a82e168438b0a07c504e0e8a05741c789059/OIP.sB7RNTd9S3N_A3mri7O6fAHaEO.jpg?u=https%3A%2F%2Ftse1.explicit.bing.net%2Fth%2Fid%2FOIP.sB7RNTd9S3N_A3mri7O6fAHaEO%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "125g de sucre\n200g de beurre mou\n4 oeufs\n200g de farine\n100g de vermicelles au chocolat\n1 cuillère à soupe de cacao\n½ cuillère à café de cannelle\n1 sachet de levure chimique\n1/8L de vin rouge\n",
+    "inst": "Mélanger tous les ingrédients pour obtenir une pâte homogène.\nBeurrer un moule à manqué et y verser le mélange.\nFaire cuire 1h au four à 180°.\nDémouler le gâteau et saupoudrer de sucre glace. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770360484845,
+    "titre": "Galettes de pomme de terre",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 4,
+    "img": "https://files.meilleurduchef.com/mdc/photo/recette/galettes-pomme-terre/galettes-pomme-terre-800.jpg",
+    "ing": "6 patates/ personnes (environ)\n1 oignon\n2 œufs \nSel, poivre\nMaggi\nPersil éventuellement\nCitron\nHuile de tournesol",
+    "inst": "Éplucher les patates et les râper finement crues avec l’oignon. \nLes placer dans une passoire et les écraser à la main pour qu’elles soient dégorgées de toute eau (au maximum).\nPlacer l’ensemble dans un cul de poule. Assaisonner et y ajouter les 2 œufs entiers. Ajouter un peu de citron. Bien mélanger. \nDans une grande poêle, verser généreusement de l’huile de tournesol. Quand l’huile est chaude, prendre de la pâte avec une cuillère et faire des galettes dedans de la taille souhaitée. Bien aplatir.\nLaisser griller de chaque côté (au jugé). Au besoin, remettre de l’huile si nécessaire. Les galettes doivent être dans la graisse. \nUne fois prêtes, les réserver sur une assiette avec du papier de cuisson. \nServir avec une salade ou une soupe.\nPeut se manger froide. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770360649222,
+    "titre": "Croque monsieur",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://plus.unsplash.com/premium_photo-1726804856260-de05c52bf57d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "Pain de mie\nTranches de jambon blanc\nOignons\nBeurre\nTomate\nFromage à croque-monsieur\n",
+    "inst": "Emincer l'oignon et la tomate.\nBeurrer les pains et alterner avec jambon, oignon, tomate et fromage.\nPasser le tout au four à 180° sur chaleur tournante environ 15 minutes.",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770360763475,
+    "titre": "Coquillettes au jambon",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x316/f/4/1cbda2ad4f35987cf703fc01c037f1fd35577139b255bf4771e9ed44448e69/OIP.4V81uJbvXTPCOwaYTthz7QHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.4V81uJbvXTPCOwaYTthz7QHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "250g de coquillettes \nOignons (facultatif)\nUn morceau de beurre\nMaggi\nJambon en cube ou coupé OU lardons\n",
+    "inst": "Faire cuire les pates.\nFaire revenir les oignons et les lardons.\nMélanger le tout. ",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770360848801,
+    "titre": "Riz aux œufs pochés",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x474/2/2/f9c956a58b2defc2fecb2ec123334d7b18dfbda3cc88791e29388685d4366c/OIP.yX8BproMhJAqZFH5J36fpQHaHa.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.yX8BproMhJAqZFH5J36fpQHaHa%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "2 œufs/personne\nRiz\nPulpe tomate (petite brique suffit)\n",
+    "inst": "Faire une sauce tomate. Claquer les œufs dans la sauce une fois qu’elle a un peu mijoté.\nPour servir, séparer les œufs pour les remettre par-dessus après. \nFaire cuire le riz puis le mélanger à la sauce. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770360892533,
+    "titre": "Quiche lorraine",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1727178757756-8d2accd05082?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1 pâte feuilletée\n1 barquette de lardons nature\n5 oignons\n5 oeufs\n1 cuillère à soupe de crème fraîche\n1 paquet de gruyère râpé \nSel, poivre, Maggi\n",
+    "inst": "Préchauffer le four à 220°, cuisson tarte/quiche.\nÉtaler la pâte dans le plat prévu et y mettre les lardons.\nÉplucher les oignons et les couper en lamelles et les rajouter au reste.\nBattre les œufs avec du sel, du poivre, Maggi puis la crème fraîche. \nVerser le mélange dans le plat et parsemer de gruyère.\nEnfourner pour 40/45 minutes.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770360971132,
+    "titre": "Quiche aux poireaux",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x316/2/e/45e365af781669d0f8523ae27c424f798faad57d466189b2f4fd9fa1f83db9/OIP.czg9J7kffZwTuSm8sGeexQHaE8.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.czg9J7kffZwTuSm8sGeexQHaE8%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 pâte feuilletée\n1 barquette de lardons nature\n3 poireaux\n5 oeufs\n1 cuillère à soupe de crème fraîche\n1 paquet de gruyère râpé \nSel, poivre, Maggi\n",
+    "inst": "Couper le haut des poireaux (les feuilles) et la partie poilue avant de les couper en tronçons. \nFaire revenir/fondre les poireaux avec les lardons une quinzaine de minutes.\nPréchauffer le four à 220°, cuisson tarte/quiche.\nÉtaler la pâte dans le plat prévu et y mettre les lardons.\nBattre les œufs avec du sel, du poivre, Maggi puis la crème fraîche. \nVerser le mélange dans le plat et parsemer de gruyère.\nEnfourner pour 40/45 minutes.\n\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770361035866,
+    "titre": "Nouilles aux oignons",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s1.qwant.com/thumbr/474x266/2/7/26fbecc166479a344ecc0c3b011b5f6f0ff78d6a853681cd4b27d22bb77b8e/OIP.ypVj0RlXip6SRu7mMk6xagHaEK.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.ypVj0RlXip6SRu7mMk6xagHaEK%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "250g de nouilles\n3 oignons\nHuile d’olive\n",
+    "inst": "Éplucher et émincer les oignons.\nLes faire revenir dans de l’huile d’olive jusqu’à ce qu’ils soient brunis.\nFaire cuire les nouilles et, une fois cuite et égoutter, les ajouter aux oignons.\nBien mélanger en ajoutant un peu d’huile d’olive. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770361126527,
+    "titre": "Nouilles aux œufs et à la tomate",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x250/d/8/f78840ae3642578a8a13267d4addeb9cd37e0b26031fa02bdf30675a8aa6ce/OIP.CkNZmpFtznCo3q8k9-ZGUwHaD6.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.CkNZmpFtznCo3q8k9-ZGUwHaD6%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "250g de pâtes\n1 oignon\n1 gousse d’ail\n6 tomates\n6 oeufs\nSel, poivre, Maggi\n",
+    "inst": "Faire chauffer l’eau et, une fois à ébullition, mettre les tomates dedans pendant 5 minutes. Jeter l’eau et les mettre dans l’eau froide.\nFaire cuire les pâtes.\nÉplucher et émincer l’oignon et l’ail.\nDans une poêle, mettre de l’huile d’olive à chauffer et ajouter l’oignon.\nCouper les tomates et les ajouter aux oignons, puis l’ail. Laisser mijoter à feu doux pendant 20 minutes.\nBattre les œufs avec du sel et du poivre.\nMettre les nouilles avec les tomates et bien mélanger. \nAjouter l'œuf et remuer jusqu’à ce qu’il soit cuit.\nOn peut rajouter des lardons et/ou du gruyère. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770361182296,
+    "titre": "Choux de Bruxelles",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1576749872435-ff88a71c1ae2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "1kg de choux de Bruxelles \nTranches de lards (paquet de 3/4)\nSel, poivre\n",
+    "inst": "Éplucher les choux de Bruxelles (sauf si congelés).\nCouper les tranches de lard en gros carrés et les faire revenir dans une sauteuse/cocotte. \nMettre les choux sur le lard (directement si congelés).\nMettre de l’eau jusqu’à ce que les choux soient couverts. Salez, poivrez.\nPorter à ébullition, mettre à feu doux et couvrir.\nLaisser cuire une bonne 1⁄2 heure pour des frais et voir sur paquet pour congelés : piquer pour voir.\nServir à l'écumoire. L’eau restante peut servir de soupe.\n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770361262043,
+    "titre": "Crêpes salées",
+    "cat": "Plat",
+    "vege": false,
+    "portions": 4,
+    "img": "https://images.unsplash.com/photo-1554230095-49b8c83f10e3?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "ing": "3 oeufs \n250g de farine\n1 cuillère à soupe d’huile\n1 pincée de sel\n½ litre de lait\n\n\n1 barquette de lardons\n25cl de crème fraîche\nGruyère râpé\n4 oignons\nSel, poivre\n",
+    "inst": "Pour la pâte : mettre la farine dans un récipient, faire une fontaine et ajouter les oeufs, l’huile et un peu de lait. Mélanger.\nRajouter progressivement du lait jusqu’à ce que la pâte soit liquide et laisser reposer 1h à température ambiante.\nFaire griller les oignons dans une poêle auxquels on ajoutera les oignons préalablement coupés en lamelles. Laisser mijoter jusqu’à ce que l’ensemble soit cuit.\nRajouter la crème fraîche et assaisonner. Mélanger.\nPendant ce temps, faire sauter les crêpes.\nPour la préparation finale, parsemer la crêpe de gruyère, y ajouter 2 cuillères de farce et les rouler avant de les disposer dans un plat.\nLa farce est prévue pour 5 à 6 crêpes.\nMettre dans le four, préalablement préchauffer à 150° (chaleur tournante), et laisser cuire 10 minutes environ. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770361365064,
+    "titre": "Munster aux oignons",
+    "cat": "Plat",
+    "vege": true,
+    "portions": 2,
+    "img": "https://s2.qwant.com/thumbr/474x269/5/e/18eb50ca20b12924dbbb5c2b6ab9808efd2f3ab6d4489a8a7a0cfbfdd5b00f/OIP.LyDAj2TO2TYdoPcqiv1QPQHaEN.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP.LyDAj2TO2TYdoPcqiv1QPQHaEN%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "1 munster\n1 ou 2 oignons",
+    "inst": "Émincer les oignons et les faire revenir dans une matière grasse. \nQuand ils ont bien brunis, ajouter le munster.\nLaisser fondre à feu doux en remuant régulièrement. \n",
+    "note": 0,
+    "fav": false
+  },
+  {
+    "id": 1770361455349,
+    "titre": "Pilons de poulet",
+    "cat": "Accompagnement",
+    "vege": false,
+    "portions": 4,
+    "img": "https://s2.qwant.com/thumbr/474x267/e/4/f7c307b89a202e424cf16a0767db21cb71504a93227de6a6c8865336223640/OIP._IL6-GPbTuRumpumWlvVEAHaEL.jpg?u=https%3A%2F%2Ftse.mm.bing.net%2Fth%2Fid%2FOIP._IL6-GPbTuRumpumWlvVEAHaEL%3Fpid%3DApi&q=0&b=1&p=0&a=0",
+    "ing": "4 pilons de poulet\nSel, poivre",
+    "inst": "Préchauffer le four à 180°, chaleur tournante.\nDisposer les pilons sur du papier sulfurisé. \nS’ils sont marinés, ne pas les assaisonner. A défaut, saler et poivrer.\nEnfourner pour 45 minutes. \nUne fois bien grillés, baisser le four sur 150°. \n",
+    "note": 0,
+    "fav": false
+  }
+    ];
+
+    window.onload = function() {
+        let localData = [];
+        try { localData = JSON.parse(localStorage.getItem('myRecipes')) || []; } catch (e) { localData = []; }
+        const localMap = new Map(localData.map(r => [r.id, r]));
+        const merged = MES_RECETTES_JSON.map(preset => {
+            const local = localMap.get(preset.id);
+            if (local) return { ...preset, note: local.note, fav: local.fav };
+            return preset;
+        });
+        const codeIds = new Set(MES_RECETTES_JSON.map(r => r.id));
+        localData.forEach(r => { if (!codeIds.has(r.id)) merged.push(r); });
+        localRecipes = merged;
+        localStorage.setItem('myRecipes', JSON.stringify(localRecipes));
+        displayRecipes();
+    };
+</script>
+</body>
+</html>
